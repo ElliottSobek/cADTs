@@ -87,7 +87,7 @@ void insert_node_sorted(node_t **const list, const char *const entry) {
 }
 
 void delete_node(node_t **const list, const char *const entry) {
-	node_t *const node = find_node(*list, entry), *const delete_node = node;
+	node_t *const node = find_node(*list, entry), *delete_node = node;
 
 	if (!node->prev)
 		*list = node->next;
@@ -101,7 +101,9 @@ void delete_node(node_t **const list, const char *const entry) {
 	}
 
 	free(delete_node->datum);
+	delete_node->datum = NULL;
 	free(delete_node);
+	delete_node = NULL;
 }
 
 void destroy_list(node_t *list) {
@@ -112,7 +114,9 @@ void destroy_list(node_t *list) {
 		list = list->next;
 
 		free(tmp->datum);
+		tmp->datum = NULL;
 		free(tmp);
+		tmp = NULL;
 	}
 }
 

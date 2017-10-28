@@ -99,7 +99,9 @@ void delete_node(node_t **const list, const char *const entry) {
 	}
 
 	free(delete_node->datum);
+	delete_node->datum = NULL;
 	free(delete_node);
+	delete_node = NULL;
 }
 
 void destroy_list(node_t *list) {
@@ -110,7 +112,9 @@ void destroy_list(node_t *list) {
 		list = list->next;
 
 		free(tmp->datum);
+		tmp->datum = NULL;
 		free(tmp);
+		tmp = NULL;
 	}
 }
 

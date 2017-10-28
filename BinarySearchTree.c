@@ -81,15 +81,21 @@ node_t *delete_node(node_t *root, const char *const key) {
 		if (!root->left && !root->right) {
 			root = NULL;
 			free(del_node->datum);
+			del_node->datum = NULL;
 			free(del_node);
+			del_node = NULL;
 		} else if (!root->left) {
 			root = root->right;
 			free(del_node->datum);
+			del_node->datum = NULL;
 			free(del_node);
+			del_node = NULL;
 		} else if (!root->right) {
 			root = root->left;
 			free(del_node->datum);
+			del_node->datum = NULL;
 			free(del_node);
+			del_node = NULL;
 		} else {
 			const size_t del_key_len = strlen(del_node->datum);
 			del_node = minValueNode(root->right);
@@ -102,13 +108,15 @@ node_t *delete_node(node_t *root, const char *const key) {
 	return root;
 }
 
-void destroy_tree(node_t *const root) {
+void destroy_tree(node_t *root) {
 	if (!root)
 		return;
 	destroy_tree(root->left);
 	destroy_tree(root->right);
 	free(root->datum);
+	root->datum = NULL;
 	free(root);
+	root = NULL;
 }
 
 void print_tree_in_order(node_t *const root) {

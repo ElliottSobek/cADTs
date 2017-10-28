@@ -82,12 +82,15 @@ void destroy_list(node_t *list) {
 		list = list->next;
 
 		free(tmp->key);
+		tmp->key = NULL;
 		free(tmp->value);
+		tmp->value = NULL;
 		free(tmp);
+		tmp = NULL;
 	}
 }
 
-void destroy_table(hashtable_t *const ht) {
+void destroy_table(hashtable_t *ht) {
 	for (unsigned int i = 0; i < ht->max_size; i++) {
 		if (!ht->data[i])
 			continue;
@@ -95,12 +98,17 @@ void destroy_table(hashtable_t *const ht) {
 			destroy_list(ht->data[i]);
 		else {
 			free(ht->data[i]->key);
+			ht->data[i]->key = NULL;
 			free(ht->data[i]->value);
+			ht->data[i]->value = NULL;
 			free(ht->data[i]);
+			ht->data[i] = NULL;
 		}
 	}
 	free(ht->data);
+	ht->data = NULL;
 	free(ht);
+	ht = NULL;
 }
 
 node_t *find_prev_node(node_t *const list, const char *const entry) {
@@ -131,8 +139,11 @@ void remove_collision_node(node_t **const list, node_t *const prev) {
 	}
 
 	free(delete_node->key);
+	delete_node->key = NULL;
 	free(delete_node->value);
+	delete_node->value = NULL;
 	free(delete_node);
+	delete_node = NULL;
 }
 
 void add_collision_node(node_t *const list, node_t *const new_node) {
@@ -185,7 +196,9 @@ void remove_set(hashtable_t *const ht, const char *const key) {
 		remove_collision_node(&ht->data[bin], find_prev_node(ht->data[bin], key));
 	else {
 		free(ht->data[bin]->key);
+		ht->data[bin]->key = NULL;
 		free(ht->data[bin]->value);
+		ht->data[bin]->value = NULL;
 		free(ht->data[bin]);
 		ht->data[bin] = NULL;
 	}

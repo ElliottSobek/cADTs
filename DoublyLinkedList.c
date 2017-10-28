@@ -14,11 +14,11 @@ typedef struct node {
 node_t *create_node(const char *const entry) {
 	const size_t entry_len = strlen(entry);
 
-	node_t *const node = malloc(sizeof(node_t));
+	node_t *const node = (node_t*) malloc(sizeof(node_t));
 	if (!node)
 		exit(EXIT_FAILURE);
 
-	node->datum = calloc((entry_len + NT_LEN), sizeof(char));
+	node->datum = (char*) calloc((entry_len + NT_LEN), sizeof(char));
 	if (!node->datum)
 		exit(EXIT_FAILURE);
 

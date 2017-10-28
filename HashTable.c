@@ -25,11 +25,11 @@ hashtable_t *create_ht(const unsigned int max_size) {
 	if (max_size < 1)
 		return NULL;
 
-	hashtable_t *ht = malloc(sizeof(hashtable_t));
+	hashtable_t *ht = (hashtable_t*) malloc(sizeof(hashtable_t));
 	if (!ht)
 		exit(EXIT_FAILURE);
 
-	ht->data = malloc(sizeof(node_t *) * max_size);
+	ht->data = (node_t**) malloc(sizeof(node_t*) * max_size);
 	if (!ht->data)
 		exit(EXIT_FAILURE);
 
@@ -45,16 +45,16 @@ hashtable_t *create_ht(const unsigned int max_size) {
 node_t *create_node(const char *const key, const char *const value) {
 	const size_t key_len = strlen(key), value_len = strlen(value);
 
-	node_t *node = malloc(sizeof(node_t));
+	node_t *node = (node_t*) malloc(sizeof(node_t));
 	if (!node)
 		return NULL;
 
-	node->key = calloc(key_len + NT_LEN, sizeof(char));
+	node->key = (char*) calloc(key_len + NT_LEN, sizeof(char));
 	if (!node->key)
 		return NULL;
 	strncpy(node->key, key, key_len);
 
-	node->value = calloc(value_len + NT_LEN, sizeof(char));
+	node->value = (char*) calloc(value_len + NT_LEN, sizeof(char));
 	if (!node->value)
 		return NULL;
 	strncpy(node->value, value, value_len);

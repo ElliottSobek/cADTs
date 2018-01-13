@@ -5,6 +5,7 @@
 // var == NULL; EQ to: !var
 
 #define NT_LEN 1
+#define STR_MAX 2048
 
 typedef struct node {
 	char *datum;
@@ -12,7 +13,7 @@ typedef struct node {
 } node_t;
 
 node_t *create_node(const char *const entry) {
-	const size_t entry_len = strlen(entry);
+	const size_t entry_len = strnlen(entry, STR_MAX);
 
 	node_t *const node = (node_t*) malloc(sizeof(node_t));
 	if (!node)
@@ -30,7 +31,7 @@ node_t *create_node(const char *const entry) {
 }
 
 node_t *find_prev_node(node_t *const list, const char *const entry) {
-	const size_t entry_len = strlen(entry);
+	const size_t entry_len = strnlen(entry, STR_MAX);
 	node_t *cur = list, *prev = NULL;
 
 	for (node_t *node = list; node->next; node = node->next) {
@@ -59,7 +60,7 @@ void insert_node(node_t *list, const char *const entry) {
 
 void insert_node_sorted(node_t **const list, const char *const entry) {
 	node_t *cur = *list, *prev = NULL, *new_node = create_node(entry);
-	const size_t datum_len = strlen(new_node->datum);
+	const size_t datum_len = strnlen(new_node->datum, STR_MAX);
 
 	if (!cur) {
 		*list = new_node;
@@ -161,5 +162,5 @@ int main(void) {
 
 	destroy_list(list);
 
-	return 0;
+	return EXIT_SUCCESS;
 }

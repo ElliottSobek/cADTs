@@ -4,10 +4,11 @@
 
 // var == NULL; EQ to: !var
 
+#define NT_LEN 1
+#define HT_DELTA 2
+#define STR_MAX 2048
 #define DEFAULT_SIZE 10
 #define PERCENT_CUTOFF 80
-#define HT_DELTA 2
-#define NT_LEN 1
 
 typedef struct node {
 	char *key, *value;
@@ -43,7 +44,7 @@ hashtable_t *create_ht(const unsigned int max_size) {
 }
 
 node_t *create_node(const char *const key, const char *const value) {
-	const size_t key_len = strlen(key), value_len = strlen(value);
+	const size_t key_len = strnlen(key, STR_MAX), value_len = strnlen(value, STR_MAX);
 
 	node_t *node = (node_t*) malloc(sizeof(node_t));
 	if (!node)
@@ -112,7 +113,7 @@ void destroy_table(hashtable_t *ht) {
 }
 
 node_t *find_prev_node(node_t *const list, const char *const entry) {
-	const size_t entry_len = strlen(entry);
+	const size_t entry_len = strnlen(entry, STR_MAX);
 	node_t *cur = list, *prev = NULL;
 
 	for (node_t *node = list; node->next; node = node->next) {
@@ -210,7 +211,7 @@ char *get_value(hashtable_t *const ht, const char *const key) {
 	int cmp_res;
 
 	for (node_t *node = ht->data[bin]; node; node = node->next) {
-		cmp_res = strncmp(key, ht->data[bin]->key, strlen(key));
+		cmp_res = strncmp(key, ht->data[bin]->key, strnlen(key, STR_MAX));
 
 		if (cmp_res == 0)
 			return node->value;
@@ -301,5 +302,5 @@ int main(void) {
 
 	destroy_table(ht2);
 
-	return 0;
+	return EXIT_SUCCESS;
 }

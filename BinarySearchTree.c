@@ -5,6 +5,7 @@
 // var == NULL; EQ to: !var
 
 #define NT_LEN 1
+#define STR_MAX 2048
 
 typedef struct node {
 	char *datum;
@@ -12,7 +13,7 @@ typedef struct node {
 } node_t;
 
 node_t *create_node(const char *const entry) {
-	const size_t entry_len = strlen(entry);
+	const size_t entry_len = strnlen(entry, STR_MAX);
 
 	node_t *const node = (node_t*) malloc(sizeof(node_t));
 	if (!node)
@@ -41,7 +42,7 @@ void insert_node(node_t **const root, const char *const entry) {
 	node_t *cur = *root, *parent;
 
 	while (cur) {
-		cmp_res = strncmp(new_node->datum, cur->datum, strlen(new_node->datum));
+		cmp_res = strncmp(new_node->datum, cur->datum, strnlen(new_node->datum, STR_MAX));
 		parent = cur;
 
 		if (cmp_res < 0)
@@ -66,7 +67,7 @@ node_t *minValueNode(node_t *const node) {
 }
 
 node_t *delete_node(node_t *root, const char *const key) {
-	const size_t key_len = strlen(key);
+	const size_t key_len = strnlen(key, STR_MAX);
 	int cmp_res = strncmp(key, root->datum, key_len);
 
 	if (!root)
@@ -97,9 +98,9 @@ node_t *delete_node(node_t *root, const char *const key) {
 			free(del_node);
 			del_node = NULL;
 		} else {
-			const size_t del_key_len = strlen(del_node->datum);
+			const size_t del_key_len = strnlen(del_node->datum, STR_MAX);
 			del_node = minValueNode(root->right);
-			root->datum = realloc(root->datum, sizeof(char) * (del_key_len + NT_LEN));
+			root->datum = (char*) realloc(root->datum, sizeof(char) * (del_key_len + NT_LEN));
 
 			strncpy(root->datum, del_node->datum, del_key_len);
 			root->right = delete_node(root->right, del_node->datum);
@@ -174,5 +175,5 @@ int main(void) {
 
 	destroy_tree(root);
 
-	return 0;
+	return EXIT_SUCCESS;
 }

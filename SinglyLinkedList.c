@@ -7,15 +7,23 @@
 #define NT_LEN 1
 #define STR_MAX 2048
 
-typedef struct node {
+typedef struct node_s {
 	char *datum;
-	struct node *next;
+	struct node_s *next;
 } node_t;
 
-node_t *create_node(const char *const entry) {
+typedef node_t *Node;
+
+typedef struct s_ll_s {
+	Node root;
+} s_ll_t;
+
+typedef s_ll_t *S_Ll;
+
+static Node create_node(const char *const entry) {
 	const size_t entry_len = strnlen(entry, STR_MAX);
 
-	node_t *const node = (node_t*) malloc(sizeof(node_t));
+	Node const node = (Node) malloc(sizeof(node_t));
 	if (!node)
 		exit(EXIT_FAILURE);
 
@@ -30,11 +38,11 @@ node_t *create_node(const char *const entry) {
 	return node;
 }
 
-node_t *find_prev_node(node_t *const list, const char *const entry) {
+static Node find_prev_node(Node const list, const char *const entry) {
 	const size_t entry_len = strnlen(entry, STR_MAX);
-	node_t *cur = list, *prev = NULL;
+	Node cur = list, prev = NULL;
 
-	for (node_t *node = list; node->next; node = node->next) {
+	for (Node node = list; node->next; node = node->next) {
 		if (strncmp(entry, node->datum, entry_len) == 0)
 			return prev;
 		prev = cur;
@@ -44,11 +52,11 @@ node_t *find_prev_node(node_t *const list, const char *const entry) {
 	return prev;
 }
 
-void insert_node(node_t *list, const char *const entry) {
-	node_t *node = list, *new_node = create_node(entry);
+void s_ll_insert(S_Ll list, const char *const entry) {
+	Node node = list->root, new_node = create_node(entry);
 
 	if (!node) {
-		list = new_node;
+		list->root = new_node;
 		return;
 	}
 
@@ -58,22 +66,23 @@ void insert_node(node_t *list, const char *const entry) {
 	node->next = new_node;
 }
 
-void insert_node_sorted(node_t **const list, const char *const entry) {
-	node_t *cur = *list, *prev = NULL, *new_node = create_node(entry);
+void s_ll_insert_sorted(S_Ll list, const char *const entry) {
+	Node *const root = &list->root;
+	Node cur = *root, prev = NULL, new_node = create_node(entry);
 	const size_t datum_len = strnlen(new_node->datum, STR_MAX);
 
 	if (!cur) {
-		*list = new_node;
+		*root = new_node;
 		return;
 	}
 
 	if (strncmp(new_node->datum, cur->datum, datum_len) < 0) {
 		new_node->next = cur;
-		*list = new_node;
+		*root = new_node;
 		return;
 	}
 
-	for (node_t *node = *list; node; node = node->next) {
+	for (Node node = *root; node; node = node->next) {
 		if (strncmp(new_node->datum, node->datum, datum_len) < 0) {
 			new_node->next = cur;
 			prev->next = new_node;
@@ -86,12 +95,13 @@ void insert_node_sorted(node_t **const list, const char *const entry) {
 	prev->next = new_node;
 }
 
-void delete_node(node_t **const list, const char *const entry) {
-	node_t *delete_node, *prev = find_prev_node(*list, entry);
+void s_ll_remove(S_Ll list, const char *const entry) {
+	Node *const root = &list->root;
+	Node delete_node, prev = find_prev_node(*root, entry);
 
 	if (!prev) {
-		delete_node = *list;
-		*list = (*list)->next;
+		delete_node = *root;
+		*root = (*root)->next;
 	} else if (!prev->next)
 		delete_node = prev;
 	else {
@@ -105,24 +115,31 @@ void delete_node(node_t **const list, const char *const entry) {
 	delete_node = NULL;
 }
 
-void destroy_list(node_t *list) {
-	node_t *tmp;
+void s_ll_destroy(S_Ll list) {
+	Node tmp, root = list->root;
 
-	while (list) {
-		tmp = list;
-		list = list->next;
+	while (root) {
+		tmp = root;
+		root = root->next;
 
 		free(tmp->datum);
 		tmp->datum = NULL;
 		free(tmp);
 		tmp = NULL;
 	}
+	free(list);
+	list = NULL;
 }
 
-void print_list(node_t *const list) {
-
-	for (node_t *node = list; node; node = node->next)
+void s_ll_print(S_Ll list) {
+	for (Node node = list->root; node; node = node->next)
 		printf("%s\n", node->datum);
+}
+
+S_Ll s_ll_create(void) {
+	S_Ll list = (S_Ll) malloc(sizeof(S_Ll));
+	list->root = NULL;
+	return list;
 }
 
 /*  ASSERT:
@@ -134,33 +151,35 @@ void print_list(node_t *const list) {
 	Johnson
 */
 int main(void) {
-	node_t *list = create_node("Alice"); // Create
+	S_Ll list = s_ll_create();
 
-	insert_node(list, "Sally"); // Insert middle
+	s_ll_insert(list, "Alice");
 
-	insert_node(list, "Zebra"); // Insert middle
+	s_ll_insert(list, "Sally");
 
-	insert_node(list, "Bob"); // Insert middle
+	s_ll_insert(list, "Zebra");
 
-	insert_node(list, "Johnson"); // Insert middle
+	s_ll_insert(list, "Bob");
 
-	insert_node_sorted(&list, "Jason"); // Insert sorted middle
+	s_ll_insert(list, "Johnson");
 
-	insert_node_sorted(&list, "Jzzz"); // Insert sorted middle
+	s_ll_insert_sorted(list, "Jason");
 
-	insert_node_sorted(&list, "AAA"); // Insert sorted head
+	s_ll_insert_sorted(list, "Jzzz");
 
-	insert_node_sorted(&list, "zzz"); // Insert sorted tail
+	s_ll_insert_sorted(list, "AAA");
 
-	delete_node(&list, "Sally"); // Delete middle
+	s_ll_insert_sorted(list, "zzz");
 
-	delete_node(&list, "zzz"); // Delete tail
+	s_ll_remove(list, "Sally");
 
-	delete_node(&list, "aaa"); // Delete head
+	s_ll_remove(list, "zzz");
 
-	print_list(list);
+	s_ll_remove(list, "aaa");
 
-	destroy_list(list);
+	s_ll_print(list);
+
+	s_ll_destroy(list);
 
 	return EXIT_SUCCESS;
 }

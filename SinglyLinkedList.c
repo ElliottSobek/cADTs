@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 // var == NULL; EQ to: !var
 
@@ -42,17 +43,30 @@ static Node find_prev_node(Node const list, const char *const entry) {
 	const size_t entry_len = strnlen(entry, STR_MAX);
 	Node cur = list, prev = NULL;
 
-	for (Node node = list; node->next; node = node->next) {
-		if (strncmp(entry, node->datum, entry_len) == 0)
+	do {
+		if (strncmp(entry, cur->datum, entry_len) == 0)
 			return prev;
 		prev = cur;
-		cur = node->next;
-	}
+		cur = cur->next;
+	} while (cur);
 
-	return prev;
+	return NULL;
 }
 
-void s_ll_insert(S_Ll list, const char *const entry) {
+static bool node_exists(const Node const list, const char *const entry) {
+	const size_t entry_len = strnlen(entry, STR_MAX);
+	Node cur = list;
+
+	do {
+		if (strncmp(entry, cur->datum, entry_len) == 0)
+			return true;
+		cur = cur->next;
+	} while (cur);
+
+	return false;
+}
+
+void s_ll_insert(const S_Ll const list, const char *const entry) {
 	Node node = list->root, new_node = create_node(entry);
 
 	if (!node) {
@@ -66,7 +80,7 @@ void s_ll_insert(S_Ll list, const char *const entry) {
 	node->next = new_node;
 }
 
-void s_ll_insert_sorted(S_Ll list, const char *const entry) {
+void s_ll_insert_sorted(const S_Ll const list, const char *const entry) {
 	Node *const root = &list->root;
 	Node cur = *root, prev = NULL, new_node = create_node(entry);
 	const size_t datum_len = strnlen(new_node->datum, STR_MAX);
@@ -95,8 +109,12 @@ void s_ll_insert_sorted(S_Ll list, const char *const entry) {
 	prev->next = new_node;
 }
 
-void s_ll_remove(S_Ll list, const char *const entry) {
+void s_ll_remove(const S_Ll const list, const char *const entry) {
 	Node *const root = &list->root;
+
+	if (!node_exists(*root, entry))
+		return;
+
 	Node delete_node, prev = find_prev_node(*root, entry);
 
 	if (!prev) {
@@ -131,18 +149,19 @@ void s_ll_destroy(S_Ll list) {
 	list = NULL;
 }
 
-void s_ll_print(S_Ll list) {
+void s_ll_print(const S_Ll const list) {
 	for (Node node = list->root; node; node = node->next)
 		printf("%s\n", node->datum);
 }
 
 S_Ll s_ll_create(void) {
-	S_Ll list = (S_Ll) malloc(sizeof(S_Ll));
+	const S_Ll const list = (S_Ll) malloc(sizeof(S_Ll));
 	list->root = NULL;
 	return list;
 }
 
 /*  ASSERT:
+	AAA
 	Alice
 	Jason
 	Jzzz
@@ -151,7 +170,7 @@ S_Ll s_ll_create(void) {
 	Johnson
 */
 int main(void) {
-	S_Ll list = s_ll_create();
+	const S_Ll const list = s_ll_create();
 
 	s_ll_insert(list, "Alice");
 
@@ -170,6 +189,10 @@ int main(void) {
 	s_ll_insert_sorted(list, "AAA");
 
 	s_ll_insert_sorted(list, "zzz");
+
+	s_ll_print(list);
+
+	printf("\n");
 
 	s_ll_remove(list, "Sally");
 

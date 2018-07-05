@@ -24,7 +24,7 @@ typedef s_ll_t *S_Ll;
 static Node create_node(const char *const entry) {
 	const size_t entry_len = strnlen(entry, STR_MAX);
 
-	Node const node = (Node) malloc(sizeof(node_t));
+	const Node const node = (Node) malloc(sizeof(node_t));
 	if (!node)
 		exit(EXIT_FAILURE);
 
@@ -43,12 +43,12 @@ static Node find_prev_node(Node const list, const char *const entry) {
 	const size_t entry_len = strnlen(entry, STR_MAX);
 	Node cur = list, prev = NULL;
 
-	do {
+	while (cur) {
 		if (strncmp(entry, cur->datum, entry_len) == 0)
 			return prev;
 		prev = cur;
 		cur = cur->next;
-	} while (cur);
+	}
 
 	return NULL;
 }
@@ -57,17 +57,18 @@ static bool node_exists(const Node const list, const char *const entry) {
 	const size_t entry_len = strnlen(entry, STR_MAX);
 	Node cur = list;
 
-	do {
+	while (cur) {
 		if (strncmp(entry, cur->datum, entry_len) == 0)
 			return true;
 		cur = cur->next;
-	} while (cur);
+	}
 
 	return false;
 }
 
 void s_ll_insert(const S_Ll const list, const char *const entry) {
-	Node node = list->root, new_node = create_node(entry);
+	const Node const new_node = create_node(entry);
+	Node node = list->root;
 
 	if (!node) {
 		list->root = new_node;
@@ -81,23 +82,25 @@ void s_ll_insert(const S_Ll const list, const char *const entry) {
 }
 
 void s_ll_insert_sorted(const S_Ll const list, const char *const entry) {
-	Node *const root = &list->root;
-	Node cur = *root, prev = NULL, new_node = create_node(entry);
+	const Node const new_node = create_node(entry);
+
+	if (!list->root) {
+		list->root = new_node;
+		return;
+	}
+
 	const size_t datum_len = strnlen(new_node->datum, STR_MAX);
 
-	if (!cur) {
-		*root = new_node;
+	if (strncmp(new_node->datum, list->root->datum, datum_len) < 0) {
+		new_node->next = list->root;
+		list->root = new_node;
 		return;
 	}
 
-	if (strncmp(new_node->datum, cur->datum, datum_len) < 0) {
-		new_node->next = cur;
-		*root = new_node;
-		return;
-	}
+	Node cur = list->root, prev = NULL;
 
-	for (Node node = *root; node; node = node->next) {
-		if (strncmp(new_node->datum, node->datum, datum_len) < 0) {
+	while (cur) {
+		if (strncmp(new_node->datum, cur->datum, datum_len) < 0) {
 			new_node->next = cur;
 			prev->next = new_node;
 			return;
@@ -110,16 +113,15 @@ void s_ll_insert_sorted(const S_Ll const list, const char *const entry) {
 }
 
 void s_ll_remove(const S_Ll const list, const char *const entry) {
-	Node *const root = &list->root;
-
-	if (!node_exists(*root, entry))
+	if (!node_exists(list->root, entry))
 		return;
 
-	Node delete_node, prev = find_prev_node(*root, entry);
+	const Node const root = list->root, prev = find_prev_node(root, entry);
+	Node delete_node;
 
 	if (!prev) {
-		delete_node = *root;
-		*root = (*root)->next;
+		delete_node = root;
+		list->root = root->next;
 	} else if (!prev->next)
 		delete_node = prev;
 	else {
@@ -157,6 +159,7 @@ void s_ll_print(const S_Ll const list) {
 S_Ll s_ll_create(void) {
 	const S_Ll const list = (S_Ll) malloc(sizeof(S_Ll));
 	list->root = NULL;
+
 	return list;
 }
 
@@ -171,6 +174,8 @@ S_Ll s_ll_create(void) {
 */
 int main(void) {
 	const S_Ll const list = s_ll_create();
+
+	s_ll_remove(list, "a");
 
 	s_ll_insert(list, "Alice");
 

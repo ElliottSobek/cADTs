@@ -22,11 +22,11 @@ typedef struct s_ll_s {
 typedef s_ll_t *S_Ll;
 
 static Node create_node(const char *const entry) {
-	const size_t entry_len = strnlen(entry, STR_MAX);
-
 	const Node const node = (Node) malloc(sizeof(node_t));
 	if (!node)
 		exit(EXIT_FAILURE);
+
+	const size_t entry_len = strnlen(entry, STR_MAX);
 
 	node->datum = (char*) calloc((entry_len + NT_LEN), sizeof(char));
 	if (!node->datum)
@@ -89,9 +89,9 @@ void s_ll_insert_sorted(const S_Ll const list, const char *const entry) {
 		return;
 	}
 
-	const size_t datum_len = strnlen(new_node->datum, STR_MAX);
+	const size_t entry_len = strnlen(entry, STR_MAX);
 
-	if (strncmp(new_node->datum, list->root->datum, datum_len) < 0) {
+	if (strncmp(entry, list->root->datum, entry_len) < 0) {
 		new_node->next = list->root;
 		list->root = new_node;
 		return;
@@ -100,7 +100,7 @@ void s_ll_insert_sorted(const S_Ll const list, const char *const entry) {
 	Node cur = list->root, prev = NULL;
 
 	while (cur) {
-		if (strncmp(new_node->datum, cur->datum, datum_len) < 0) {
+		if (strncmp(entry, cur->datum, entry_len) < 0) {
 			new_node->next = cur;
 			prev->next = new_node;
 			return;

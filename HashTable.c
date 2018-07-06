@@ -10,50 +10,35 @@
 #define DEFAULT_SIZE 10
 #define PERCENT_CUTOFF 80
 
-typedef struct node {
+typedef struct node_s {
 	char *key, *value;
-	struct node *next;
+	struct node_s *next;
 } node_t;
 
+typedef node_t *Node;
+
 typedef struct hashtable_s {
-	node_t **data;
+	Node *data;
 	unsigned int max_size, cur_size;
 } hashtable_t;
 
-void deep_copy(hashtable_t *, hashtable_t *const);
+typedef hashtable_t *HashTable;
 
-hashtable_t *create_ht(const unsigned int max_size) {
-	if (max_size < 1)
-		return NULL;
+void insert_set(HashTable*, const char *const, const char *const);
 
-	hashtable_t *ht = (hashtable_t*) malloc(sizeof(hashtable_t));
-	if (!ht)
-		exit(EXIT_FAILURE);
-
-	ht->data = (node_t**) malloc(sizeof(node_t*) * max_size);
-	if (!ht->data)
-		exit(EXIT_FAILURE);
-
-	for (unsigned int i = 0; i < max_size; i++)
-		ht->data[i] = NULL;
-
-	ht->max_size = max_size;
-	ht->cur_size = 0;
-
-	return ht;
-}
-
-node_t *create_node(const char *const key, const char *const value) {
-	const size_t key_len = strnlen(key, STR_MAX), value_len = strnlen(value, STR_MAX);
-
-	node_t *node = (node_t*) malloc(sizeof(node_t));
+static Node create_node(const char *const key, const char *const value) {
+	const Node const node = (Node) malloc(sizeof(node_t));
 	if (!node)
 		return NULL;
+
+	const size_t key_len = strnlen(key, STR_MAX);
 
 	node->key = (char*) calloc(key_len + NT_LEN, sizeof(char));
 	if (!node->key)
 		return NULL;
 	strncpy(node->key, key, key_len);
+
+	const size_t value_len = strnlen(value, STR_MAX);
 
 	node->value = (char*) calloc(value_len + NT_LEN, sizeof(char));
 	if (!node->value)
@@ -66,7 +51,7 @@ node_t *create_node(const char *const key, const char *const value) {
 }
 
 // D. J. Bernstein Hash, Modified
-static unsigned int get_hash(hashtable_t *const ht, const char *value) {
+static unsigned int get_hash(const HashTable const ht, const char *value) {
 	unsigned int result = 5381;
 
 	while (*value)
@@ -75,8 +60,8 @@ static unsigned int get_hash(hashtable_t *const ht, const char *value) {
 	return result % ht->max_size;
 }
 
-void destroy_list(node_t *list) {
-	node_t *tmp;
+static void destroy_list(Node list) {
+	Node tmp;
 
 	while (list) {
 		tmp = list;
@@ -91,7 +76,116 @@ void destroy_list(node_t *list) {
 	}
 }
 
-void destroy_table(hashtable_t *ht) {
+static Node find_prev_node(const Node const list, const char *const entry) {
+	const size_t entry_len = strnlen(entry, STR_MAX);
+	Node cur = list, prev = NULL;
+
+	for (Node node = list; node->next; node = node->next) {
+		if (strncmp(entry, node->key, entry_len) == 0)
+			return prev;
+		prev = cur;
+		cur = node->next;
+	}
+
+	return prev;
+}
+
+static void remove_collision_node(Node *const list, Node const prev) {
+	Node delete_node;
+
+	if (!prev) {
+		delete_node = *list;
+		*list = (*list)->next;
+	} else if (!prev->next)
+		delete_node = prev;
+	else {
+		delete_node = prev->next;
+		prev->next = prev->next->next;
+	}
+
+	free(delete_node->key);
+	delete_node->key = NULL;
+	free(delete_node->value);
+	delete_node->value = NULL;
+	free(delete_node);
+	delete_node = NULL;
+}
+
+static void add_collision_node(const Node const list, const Node const new_node) {
+	Node node = list;
+
+	while (node->next)
+		node = node->next;
+
+	node->next = new_node;
+}
+
+static void deep_copy(HashTable new_table, const HashTable const ht) {
+
+	for (unsigned int i = 0; i < ht->max_size; i++) {
+		if (!ht->data[i])
+			continue;
+		for (Node node = ht->data[i]; node; node = node->next)
+			insert_set(&new_table, node->key, node->value);
+	}
+}
+
+static void print_list(const Node const list) {
+	for (Node node = list->next; node; node = node->next)
+		printf("->%s:%s", node->key, node->value);
+	printf("\n");
+}
+
+void remove_set(const HashTable const ht, const char *const key) {
+	const unsigned int bin = get_hash(ht, key);
+
+	if (ht->data[bin]->next)
+		remove_collision_node(&ht->data[bin], find_prev_node(ht->data[bin], key));
+	else {
+		free(ht->data[bin]->key);
+		ht->data[bin]->key = NULL;
+		free(ht->data[bin]->value);
+		ht->data[bin]->value = NULL;
+		free(ht->data[bin]);
+		ht->data[bin] = NULL;
+	}
+	ht->cur_size--;
+}
+
+char *get_value(const HashTable const ht, const char *const key) {
+	const unsigned int bin = get_hash(ht, key);
+	int cmp_res;
+
+	for (Node node = ht->data[bin]; node; node = node->next) {
+		cmp_res = strncmp(key, ht->data[bin]->key, strnlen(key, STR_MAX));
+
+		if (cmp_res == 0)
+			return node->value;
+	}
+
+	return NULL;
+}
+
+void print_table(const HashTable const ht) {
+	if (!ht->data[0])
+		printf("nil\n");
+	else {
+		printf("%s:%s", ht->data[0]->key, ht->data[0]->value);
+		print_list(ht->data[0]);
+	}
+
+	for (unsigned int i = 1; i < ht->max_size; i++) {
+
+		if (!ht->data[i])
+			printf("|\nv\nnil\n");
+		else {
+			printf("|\nv\n%s:%s", ht->data[i]->key, ht->data[i]->value);
+			print_list(ht->data[i]);
+		}
+	}
+}
+
+void ht_destroy(HashTable ht) {
 	for (unsigned int i = 0; i < ht->max_size; i++) {
 		if (!ht->data[i])
 			continue;
@@ -112,64 +206,41 @@ void destroy_table(hashtable_t *ht) {
 	ht = NULL;
 }
 
-node_t *find_prev_node(node_t *const list, const char *const entry) {
-	const size_t entry_len = strnlen(entry, STR_MAX);
-	node_t *cur = list, *prev = NULL;
+HashTable ht_create(const unsigned int max_size) {
+	if (max_size < 1)
+		return NULL;
 
-	for (node_t *node = list; node->next; node = node->next) {
-		if (strncmp(entry, node->key, entry_len) == 0)
-			return prev;
-		prev = cur;
-		cur = node->next;
-	}
+	const HashTable const ht = (HashTable) malloc(sizeof(hashtable_t));
+	if (!ht)
+		exit(EXIT_FAILURE);
 
-	return prev;
+	ht->data = (Node*) malloc(sizeof(Node) * max_size);
+	if (!ht->data)
+		exit(EXIT_FAILURE);
+
+	for (unsigned int i = 0; i < max_size; i++)
+		ht->data[i] = NULL;
+
+	ht->max_size = max_size;
+	ht->cur_size = 0;
+
+	return ht;
 }
 
-void remove_collision_node(node_t **const list, node_t *const prev) {
-	node_t *delete_node;
-
-	if (!prev) {
-		delete_node = *list;
-		*list = (*list)->next;
-	} else if (!prev->next)
-		delete_node = prev;
-	else {
-		delete_node = prev->next;
-		prev->next = prev->next->next;
-	}
-
-	free(delete_node->key);
-	delete_node->key = NULL;
-	free(delete_node->value);
-	delete_node->value = NULL;
-	free(delete_node);
-	delete_node = NULL;
-}
-
-void add_collision_node(node_t *const list, node_t *const new_node) {
-	node_t *node = list;
-
-	while (node->next)
-		node = node->next;
-
-	node->next = new_node;
-}
-
-void insert_set(hashtable_t **const ht_head, const char *const key, const char *const value) {
-	hashtable_t *const ht = *ht_head;
+void insert_set(HashTable *ht_head, const char *const key, const char *const value) {
+	const HashTable const ht = *ht_head;
 
 	if (ht->cur_size >= ((ht->max_size * PERCENT_CUTOFF) / 100)) {
-		hashtable_t *new_table = create_ht(ht->max_size * HT_DELTA);
+		HashTable new_table = ht_create(ht->max_size * HT_DELTA);
 
 		deep_copy(new_table, ht);
 		insert_set(&new_table, key, value);
-		destroy_table(ht);
+		ht_destroy(ht);
 		*ht_head = new_table;
 		return;
 	}
 
-	node_t *const node = create_node(key, value);
+	Node const node = create_node(key, value);
 	const unsigned int bin = get_hash(ht, key);
 
 	if (!ht->data[bin])
@@ -180,73 +251,8 @@ void insert_set(hashtable_t **const ht_head, const char *const key, const char *
 	ht->cur_size++;
 }
 
-void deep_copy(hashtable_t *new_table, hashtable_t *const ht) {
-
-	for (unsigned int i = 0; i < ht->max_size; i++) {
-		if (!ht->data[i])
-			continue;
-		for (node_t *node = ht->data[i]; node; node = node->next)
-			insert_set(&new_table, node->key, node->value);
-	}
-}
-
-void remove_set(hashtable_t *const ht, const char *const key) {
-	const unsigned int bin = get_hash(ht, key);
-
-	if (ht->data[bin]->next)
-		remove_collision_node(&ht->data[bin], find_prev_node(ht->data[bin], key));
-	else {
-		free(ht->data[bin]->key);
-		ht->data[bin]->key = NULL;
-		free(ht->data[bin]->value);
-		ht->data[bin]->value = NULL;
-		free(ht->data[bin]);
-		ht->data[bin] = NULL;
-	}
-	ht->cur_size--;
-}
-
-char *get_value(hashtable_t *const ht, const char *const key) {
-	const unsigned int bin = get_hash(ht, key);
-	int cmp_res;
-
-	for (node_t *node = ht->data[bin]; node; node = node->next) {
-		cmp_res = strncmp(key, ht->data[bin]->key, strnlen(key, STR_MAX));
-
-		if (cmp_res == 0)
-			return node->value;
-	}
-
-	return NULL;
-}
-
-void print_list(node_t *const list) {
-	for (node_t *node = list->next; node; node = node->next)
-		printf("->%s:%s", node->key, node->value);
-	printf("\n");
-}
-
-void print_table(hashtable_t *const ht) {
-	if (!ht->data[0])
-		printf("nil\n");
-	else {
-		printf("%s:%s", ht->data[0]->key, ht->data[0]->value);
-		print_list(ht->data[0]);
-	}
-
-	for (unsigned int i = 1; i < ht->max_size; i++) {
-
-		if (!ht->data[i])
-			printf("|\nv\nnil\n");
-		else {
-			printf("|\nv\n%s:%s", ht->data[i]->key, ht->data[i]->value);
-			print_list(ht->data[i]);
-		}
-	}
-}
-
 int main(void) {
-	hashtable_t *ht1 = create_ht(DEFAULT_SIZE);
+	HashTable ht1 = ht_create(DEFAULT_SIZE);
 
 	insert_set(&ht1, "One", "1");
 
@@ -270,11 +276,11 @@ int main(void) {
 
 	print_table(ht1);
 
-	destroy_table(ht1);
+	ht_destroy(ht1);
 
 	printf("===============================================================\n");
 
-	hashtable_t *ht2 = create_ht(DEFAULT_SIZE);
+	HashTable ht2 = ht_create(DEFAULT_SIZE);
 
 	insert_set(&ht2, "One", "1");
 
@@ -300,7 +306,7 @@ int main(void) {
 
 	printf("This is get value function, get Eight: %s\n", get_value(ht2, "Eight"));
 
-	destroy_table(ht2);
+	ht_destroy(ht2);
 
 	return EXIT_SUCCESS;
 }

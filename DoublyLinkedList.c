@@ -7,17 +7,25 @@
 #define NT_LEN 1
 #define STR_MAX 2048
 
-typedef struct node {
+typedef struct node_s {
 	char *datum;
-	struct node *prev, *next;
+	struct node_s *prev, *next;
 } node_t;
 
-node_t *create_node(const char *const entry) {
-	const size_t entry_len = strnlen(entry, STR_MAX);
+typedef node_t *Node;
 
-	node_t *const node = (node_t*) malloc(sizeof(node_t));
+typedef struct d_ll_s {
+	Node root;
+} d_ll_t;
+
+typedef d_ll_t *D_Ll;
+
+static Node create_node(const char *const entry) {
+	const Node const node = (Node) malloc(sizeof(node_t));
 	if (!node)
 		exit(EXIT_FAILURE);
+
+	const size_t entry_len = strnlen(entry, STR_MAX);
 
 	node->datum = (char*) calloc((entry_len + NT_LEN), sizeof(char));
 	if (!node->datum)
@@ -31,75 +39,89 @@ node_t *create_node(const char *const entry) {
 	return node;
 }
 
-node_t *find_node(node_t *const list, const char *const entry) {
+static Node find_node(const Node const list, const char *const entry) {
 	const size_t entry_len = strnlen(entry, STR_MAX);
+	Node cur = list;
 
-	for (node_t *node = list; node; node = node->next)
-		if (strncmp(entry, node->datum, entry_len) == 0)
-			return node;
+	while (cur) {
+		if (strncmp(entry, cur->datum, entry_len) == 0)
+			return cur;
+		cur = cur->next;
+	}
 
 	return NULL;
 }
 
-void insert_node(node_t *list, const char *const entry) {
-	node_t *node = list, *new_node = create_node(entry);
+void d_ll_insert(const D_Ll const list, const char *const entry) {
+	const Node const new_node = create_node(entry);
 
-	if (!node) {
-		list = new_node;
+	if (!list->root) {
+		list->root = new_node;
 		return;
 	}
 
-	while (node->next)
-		node = node->next;
+	Node root = list->root;
 
-	new_node->prev = node;
-	node->next = new_node;
+	while (root->next)
+		root = root->next;
+
+	new_node->prev = root;
+	root->next = new_node;
 }
 
-void insert_node_sorted(node_t **const list, const char *const entry) {
-	node_t *cur = *list, *new_node = create_node(entry);
-	const size_t datum_len = strnlen(new_node->datum, STR_MAX);
+void d_ll_insert_sorted(const D_Ll const list, const char *const entry) {
+	const Node const new_node = create_node(entry);
 
-	if (!cur) {
-		*list = new_node;
+	if (!list->root) {
+		list->root = new_node;
 		return;
 	}
 
-	if (strncmp(new_node->datum, cur->datum, datum_len) < 0) {
-		new_node->next = cur;
-		cur->prev = new_node;
-		*list = new_node;
+	const size_t entry_len = strnlen(entry, STR_MAX);
+
+	if (strncmp(entry, list->root->datum, entry_len) < 0) {
+		new_node->next = list->root;
+		list->root->prev = new_node;
+		list->root = new_node;
 		return;
 	}
 
-	for (node_t *node = *list; node; node = node->next) {
-		if (strncmp(new_node->datum, node->datum, datum_len) < 0) {
-			new_node->prev = cur;
-			new_node->next = cur->next;
-			cur->next->prev = new_node;
-			cur->next = new_node;
+	Node cur = list->root;
+
+	while (cur->next) {
+		if (strncmp(entry, cur->datum, entry_len) < 0) {
+			new_node->prev = cur->prev;
+			new_node->next = cur;
+			cur->prev->next = new_node;
+			cur->prev = new_node;
 			return;
 		}
-		cur = node;
+		cur = cur->next;
 	}
 
 	new_node->prev = cur;
 	cur->next = new_node;
 }
 
-void delete_node(node_t **const list, const char *const entry) {
-	node_t *const node = find_node(*list, entry), *delete_node = node;
+void d_ll_remove(const D_Ll const list, const char *const entry) {
+	if (!list->root)
+		return;
+
+	const Node const node = find_node(list->root, entry);
+
+	if (!node)
+		return;
 
 	if (!node->prev)
-		*list = node->next;
-
+		list->root = node->next;
 	else if (!node->next)
 		node->prev->next = NULL;
-
 	else {
 		node->prev->next = node->next;
 		node->next->prev = node->prev;
 	}
+
+	Node delete_node = node;
 
 	free(delete_node->datum);
 	delete_node->datum = NULL;
@@ -107,27 +129,36 @@ void delete_node(node_t **const list, const char *const entry) {
 	delete_node = NULL;
 }
 
-void destroy_list(node_t *list) {
-	node_t *tmp;
+void d_ll_destroy(D_Ll list) {
+	Node tmp, root = list->root;;
 
-	while (list) {
-		tmp = list;
-		list = list->next;
+	while (root) {
+		tmp = root;
+		root = root->next;
 
 		free(tmp->datum);
 		tmp->datum = NULL;
 		free(tmp);
 		tmp = NULL;
 	}
+	free(list);
+	list = NULL;
 }
 
-void print_list(node_t *const list) {
-
-	for (node_t *node = list; node; node = node->next)
+void d_ll_print(const D_Ll const list) {
+	for (Node node = list->root; node; node = node->next)
 		printf("%s\n", node->datum);
 }
 
+D_Ll d_ll_create(void) {
+	const D_Ll const list = (D_Ll) malloc(sizeof(D_Ll));
+	list->root = NULL;
+
+	return list;
+}
+
 /*  ASSERT:
+	AAA
 	Alice
 	Jason
 	Jzzz
@@ -136,33 +167,41 @@ void print_list(node_t *const list) {
 	Johnson
 */
 int main(void) {
-	node_t *list = create_node("Alice"); // Create
+	const D_Ll const list = d_ll_create(); // Create
 
-	insert_node(list, "Sally"); // Insert middle
+	d_ll_remove(list, "a");
 
-	insert_node(list, "Zebra"); // Insert middle
+	d_ll_insert(list, "Alice"); // Insert middle
 
-	insert_node(list, "Bob"); // Insert middle
+	d_ll_insert(list, "Sally"); // Insert middle
 
-	insert_node(list, "Johnson"); // Insert middle
+	d_ll_insert(list, "Zebra"); // Insert middle
 
-	insert_node_sorted(&list, "Jason"); // Insert sorted middle
+	d_ll_insert(list, "Bob"); // Insert middle
 
-	insert_node_sorted(&list, "Jzzz"); // Insert sorted middle
+	d_ll_insert(list, "Johnson"); // Insert middle
 
-	insert_node_sorted(&list, "AAA"); // Insert sorted head
+	d_ll_insert_sorted(list, "Jason"); // Insert sorted middle
 
-	insert_node_sorted(&list, "Zzzz"); // Insert sorted tail
+	d_ll_insert_sorted(list, "Jzzz"); // Insert sorted middle
 
-	delete_node(&list, "Sally"); // Delete middle
+	d_ll_insert_sorted(list, "AAA"); // Insert sorted head
 
-	delete_node(&list, "Zzzz"); // Delete tail
+	d_ll_insert_sorted(list, "zzz"); // Insert sorted tail
 
-	delete_node(&list, "AAA"); // Delete head
+	d_ll_print(list);
 
-	print_list(list);
+	printf("\n");
 
-	destroy_list(list);
+	d_ll_remove(list, "Sally"); // Delete middle
+
+	d_ll_remove(list, "zzz"); // Delete tail
+
+	d_ll_remove(list, "aaa"); // Delete head
+
+	d_ll_print(list);
+
+	d_ll_destroy(list);
 
 	return EXIT_SUCCESS;
 }

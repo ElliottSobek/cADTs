@@ -164,7 +164,6 @@ S_Ll s_ll_create(void) {
 }
 
 /*  ASSERT:
-	AAA
 	Alice
 	Jason
 	Jzzz
@@ -173,37 +172,37 @@ S_Ll s_ll_create(void) {
 	Johnson
 */
 int main(void) {
-	const S_Ll const list = s_ll_create();
+	const S_Ll const list = s_ll_create(); // Create
 
-	s_ll_remove(list, "a");
+	s_ll_remove(list, "a"); // Remove non existent node
 
-	s_ll_insert(list, "Alice");
+	s_ll_insert(list, "Alice"); // Insert middle
 
-	s_ll_insert(list, "Sally");
+	s_ll_insert(list, "Sally"); // Insert middle
 
-	s_ll_insert(list, "Zebra");
+	s_ll_insert(list, "Zebra"); // Insert middle
 
-	s_ll_insert(list, "Bob");
+	s_ll_insert(list, "Bob"); // Insert middle
 
-	s_ll_insert(list, "Johnson");
+	s_ll_insert(list, "Johnson"); // Insert middle
 
-	s_ll_insert_sorted(list, "Jason");
+	s_ll_insert_sorted(list, "Jason"); // Insert sorted middle
 
-	s_ll_insert_sorted(list, "Jzzz");
+	s_ll_insert_sorted(list, "Jzzz"); // Insert sorted middle
 
-	s_ll_insert_sorted(list, "AAA");
+	s_ll_insert_sorted(list, "AAA"); // Insert sorted head
 
-	s_ll_insert_sorted(list, "zzz");
+	s_ll_insert_sorted(list, "zzz"); // Insert sorted tail
 
 	s_ll_print(list);
 
 	printf("\n");
 
-	s_ll_remove(list, "Sally");
+	s_ll_remove(list, "Sally"); // Delete middle
 
-	s_ll_remove(list, "zzz");
+	s_ll_remove(list, "zzz"); // Delete tail
 
-	s_ll_remove(list, "aaa");
+	s_ll_remove(list, "AAA"); // Delete head
 
 	s_ll_print(list);
 

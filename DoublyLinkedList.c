@@ -158,7 +158,6 @@ D_Ll d_ll_create(void) {
 }
 
 /*  ASSERT:
-	AAA
 	Alice
 	Jason
 	Jzzz
@@ -169,7 +168,7 @@ D_Ll d_ll_create(void) {
 int main(void) {
 	const D_Ll const list = d_ll_create(); // Create
 
-	d_ll_remove(list, "a");
+	d_ll_remove(list, "a"); // Remove non existent node
 
 	d_ll_insert(list, "Alice"); // Insert middle
 
@@ -197,7 +196,7 @@ int main(void) {
 
 	d_ll_remove(list, "zzz"); // Delete tail
 
-	d_ll_remove(list, "aaa"); // Delete head
+	d_ll_remove(list, "AAA"); // Delete head
 
 	d_ll_print(list);
 

@@ -7,17 +7,25 @@
 #define NT_LEN 1
 #define STR_MAX 2048
 
-typedef struct node {
+typedef struct node_s {
 	char *datum;
-	struct node *left, *right;
+	struct node_s *left, *right;
 } node_t;
 
-node_t *create_node(const char *const entry) {
-	const size_t entry_len = strnlen(entry, STR_MAX);
+typedef node_t *Node;
 
-	node_t *const node = (node_t*) malloc(sizeof(node_t));
+typedef struct bst_s {
+	Node root;
+} bst_t;
+
+typedef bst_t *Bst;
+
+static Node create_node(const char *const entry) {
+	const Node const node = (Node) malloc(sizeof(node_t));
 	if (!node)
 		exit(EXIT_FAILURE);
+
+	const size_t entry_len = strnlen(entry, STR_MAX);
 
 	node->datum = (char*) calloc((entry_len + NT_LEN), sizeof(char));
 	if (!node->datum)
@@ -31,18 +39,46 @@ node_t *create_node(const char *const entry) {
 	return node;
 }
 
-void insert_node(node_t **const root, const char *const entry) {
-	node_t *const new_node = create_node(entry);
+static void destroy_tree(Node root) {
+	if (!root)
+		return;
+	destroy_tree(root->left);
+	destroy_tree(root->right);
+	free(root->datum);
+	root->datum = NULL;
 
-	if (!*root) {
-		*root = new_node;
+	free(root);
+	root = NULL;
+}
+
+static void print_tree_in_order(Node const root) {
+	if (!root)
+		return;
+	print_tree_in_order(root->left);
+	printf("%s\n", root->datum);
+	print_tree_in_order(root->right);
+}
+
+static void print_tree_pre_order(Node const root) {
+	if (!root)
+		return;
+	printf("%s\n", root->datum);
+	print_tree_pre_order(root->left);
+	print_tree_pre_order(root->right);
+}
+
+void bst_insert(Bst bst, const char *const entry) {
+	const Node const new_node = create_node(entry);
+
+	if (!bst->root) {
+		bst->root = new_node;
 		return;
 	}
 	int cmp_res;
-	node_t *cur = *root, *parent;
+	Node cur = bst->root, parent;
 
 	while (cur) {
-		cmp_res = strncmp(new_node->datum, cur->datum, strnlen(new_node->datum, STR_MAX));
+		cmp_res = strncmp(entry, cur->datum, strnlen(entry, STR_MAX));
 		parent = cur;
 
 		if (cmp_res < 0)
@@ -57,8 +93,8 @@ void insert_node(node_t **const root, const char *const entry) {
 		parent->right = new_node;
 }
 
-node_t *minValueNode(node_t *const node) {
-    node_t *cur = node;
+Node min_value_node(Node const node) {
+    Node cur = node;
 
     while (cur->left)
         cur = cur->left;
@@ -66,18 +102,25 @@ node_t *minValueNode(node_t *const node) {
     return cur;
 }
 
-node_t *delete_node(node_t *root, const char *const key) {
-	const size_t key_len = strnlen(key, STR_MAX);
-	int cmp_res = strncmp(key, root->datum, key_len);
+void bst_print_v1(Bst bst) {
+	print_tree_in_order(bst->root);
+}
+
+void bst_print_v2 (Bst bst) {
+	print_tree_pre_order(bst->root);
+}
+
+Node remove_node(Node root, const char *const entry) {
+	int cmp_res = strncmp(entry, root->datum, strnlen(entry, STR_MAX));
 
 	if (!root)
 		return NULL;
 	else if (cmp_res < 0)
-		root->left = delete_node(root->left, key);
+		root->left = remove_node(root->left, entry);
 	else if (cmp_res > 0)
-		root->right = delete_node(root->right, key);
+		root->right = remove_node(root->right, entry);
 	else {
-		node_t *del_node = root;
+		Node del_node = root;
 
 		if (!root->left && !root->right) {
 			root = NULL;
@@ -99,81 +142,99 @@ node_t *delete_node(node_t *root, const char *const key) {
 			del_node = NULL;
 		} else {
 			const size_t del_key_len = strnlen(del_node->datum, STR_MAX);
-			del_node = minValueNode(root->right);
+			del_node = min_value_node(root->right);
 			root->datum = (char*) realloc(root->datum, sizeof(char) * (del_key_len + NT_LEN));
 
 			strncpy(root->datum, del_node->datum, del_key_len);
-			root->right = delete_node(root->right, del_node->datum);
+			root->right = remove_node(root->right, del_node->datum);
 		}
 	}
 	return root;
 }
 
-void destroy_tree(node_t *root) {
-	if (!root)
-		return;
-	destroy_tree(root->left);
-	destroy_tree(root->right);
-	free(root->datum);
-	root->datum = NULL;
-	free(root);
-	root = NULL;
+void bst_remove(Bst bst, const char *const entry) {
+	remove_node(bst->root, entry);
 }
 
-void print_tree_in_order(node_t *const root) {
-	if (!root)
-		return;
-	print_tree_in_order(root->left);
-	printf("%s\n", root->datum);
-	print_tree_in_order(root->right);
+char *bst_find(Bst bst, const char *const entry) {
+	if (!bst->root) {
+		return "";
+	}
+	int cmp_res;
+	Node cur = bst->root;
+
+	while (cur) {
+		cmp_res = strncmp(entry, cur->datum, strnlen(entry, STR_MAX));
+
+		if (cmp_res == 0)
+			return cur->datum;
+		else if (cmp_res < 0)
+			cur = cur->left;
+		else
+			cur = cur->right;
+	}
+
+	return "";
 }
 
-void print_tree_pre_order(node_t *const root) {
-	if (!root)
-		return;
-	printf("%s\n", root->datum);
-	print_tree_pre_order(root->left);
-	print_tree_pre_order(root->right);
+void bst_destroy(Bst bst) {
+	destroy_tree(bst->root);
+	free(bst);
+	bst = NULL;
+}
+
+Bst bst_create(void) {
+	Bst bst = (Bst) malloc(sizeof(bst_t));
+
+	if (!bst)
+		exit(EXIT_FAILURE);
+	bst->root = NULL;
+
+	return bst;
 }
 
 int main(void) {
-	node_t *root = create_node("g"); // Create, root
+	Bst bst = bst_create();
 
-	insert_node(&root, "d"); // Left node
+	bst_insert(bst, "g");
 
-	insert_node(&root, "u"); // Right node
+	bst_insert(bst, "d"); // Left node
 
-	insert_node(&root, "a"); // Left node, leaf
+	bst_insert(bst, "u"); // Right node
 
-	insert_node(&root, "e"); // Right node, leaf
+	bst_insert(bst, "a"); // Left node, leaf
 
-	insert_node(&root, "j"); // Left node
+	bst_insert(bst, "e"); // Right node, leaf
 
-	insert_node(&root, "z"); // Right node, leaf
+	bst_insert(bst, "j"); // Left node
 
-	insert_node(&root, "h"); // Left node, leaf
+	bst_insert(bst, "z"); // Right node, leaf
 
-	insert_node(&root, "s"); // Right node
+	bst_insert(bst, "h"); // Left node, leaf
 
-	insert_node(&root, "m"); // Left node
+	bst_insert(bst, "s"); // Right node
 
-	insert_node(&root, "t"); // Right node, leaf
+	bst_insert(bst, "m"); // Left node
 
-	insert_node(&root, "q"); // Right node, leaf
+	bst_insert(bst, "t"); // Right node, leaf
 
-	print_tree_in_order(root);
+	bst_insert(bst, "q"); // Right node, leaf
+
+	bst_print_v1(bst);
 
 	printf("\n");
 
-	delete_node(root, "t"); // Delete  leaf
+	bst_find(bst, "h");
 
-	delete_node(root, "m"); // Delete with one node
+	bst_remove(bst, "t"); // Delete  leaf
 
-	delete_node(root, "j"); // Delete two nodes
+	bst_remove(bst, "m"); // Delete with one node
 
-	print_tree_in_order(root);
+	bst_remove(bst, "j"); // Delete two nodes
 
-	destroy_tree(root);
+	bst_print_v2(bst);
+
+	bst_destroy(bst);
 
 	return EXIT_SUCCESS;
 }

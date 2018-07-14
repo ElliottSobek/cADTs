@@ -103,14 +103,14 @@ void d_ll_insert_sorted(const D_Ll const list, const char *const entry) {
 	cur->next = new_node;
 }
 
-void d_ll_remove(const D_Ll const list, const char *const entry) {
+int d_ll_remove(const D_Ll const list, const char *const entry) {
 	if (!list->root)
-		return;
+		return -1;
 
 	const Node const node = find_node(list->root, entry);
 
 	if (!node)
-		return;
+		return -1;
 
 	if (!node->prev)
 		list->root = node->next;
@@ -127,6 +127,7 @@ void d_ll_remove(const D_Ll const list, const char *const entry) {
 	delete_node->datum = NULL;
 	free(delete_node);
 	delete_node = NULL;
+	return 0;
 }
 
 void d_ll_destroy(D_Ll list) {

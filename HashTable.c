@@ -24,8 +24,8 @@ typedef struct s_ll_s {
 
 typedef s_ll_t *S_Ll;
 
-static Node create_node(const char *const key, const char *const value) {
-	const Node const node = (Node) malloc(sizeof(node_t));
+static Node create_node(const char *const restrict key, const char *const restrict value) {
+	const Node const restrict node = (Node) malloc(sizeof(node_t));
 	if (!node)
 		exit(EXIT_FAILURE);
 
@@ -50,9 +50,10 @@ static Node create_node(const char *const key, const char *const value) {
 	return node;
 }
 
-static Node find_prev_node(Node const list, const char *const key) {
+static Node find_prev_node(Node const list, const char *const restrict key) {
 	const size_t key_len = strnlen(key, STR_MAX);
-	Node cur = list, prev = NULL;
+	Node restrict prev = NULL;
+	Node cur = list;
 
 	while (cur) {
 		if (strncmp(key, cur->key, key_len) == 0)
@@ -64,7 +65,7 @@ static Node find_prev_node(Node const list, const char *const key) {
 	return NULL;
 }
 
-static bool node_exists(const Node const list, const char *const key) {
+static bool node_exists(const Node const list, const char *const restrict key) {
 	const size_t key_len = strnlen(key, STR_MAX);
 	Node cur = list;
 
@@ -77,7 +78,7 @@ static bool node_exists(const Node const list, const char *const key) {
 	return false;
 }
 
-void s_ll_insert(const S_Ll const list, const char *const key, const char *const value) {
+void s_ll_insert(const S_Ll const restrict list, const char *const restrict key, const char *const restrict value) {
 	const Node const new_node = create_node(key, value);
 	Node node = list->root;
 
@@ -92,7 +93,7 @@ void s_ll_insert(const S_Ll const list, const char *const key, const char *const
 	node->next = new_node;
 }
 
-void s_ll_insert_sorted(const S_Ll const list, const char *const key, const char *const value) {
+void s_ll_insert_sorted(const S_Ll const restrict list, const char *const restrict key, const char *const restrict value) {
 	const Node const new_node = create_node(key, value);
 
 	if (!list->root) {
@@ -108,7 +109,8 @@ void s_ll_insert_sorted(const S_Ll const list, const char *const key, const char
 		return;
 	}
 
-	Node cur = list->root, prev = NULL;
+	Node restrict prev = NULL;
+	Node cur = list->root;
 
 	while (cur) {
 		if (strncmp(key, cur->key, key_len) < 0) {
@@ -123,12 +125,12 @@ void s_ll_insert_sorted(const S_Ll const list, const char *const key, const char
 	prev->next = new_node;
 }
 
-int s_ll_remove(const S_Ll const list, const char *const key) {
+int s_ll_remove(const S_Ll const restrict list, const char *const restrict key) {
 	if (!node_exists(list->root, key))
 		return -1;
 
 	const Node const root = list->root, prev = find_prev_node(root, key);
-	Node delete_node;
+	Node restrict delete_node;
 
 	if (!prev) {
 		delete_node = root;
@@ -152,7 +154,7 @@ int s_ll_remove(const S_Ll const list, const char *const key) {
 	return 0;
 }
 
-void s_ll_destroy(S_Ll list) {
+void s_ll_destroy(S_Ll restrict list) {
 	Node tmp, root = list->root;
 
 	while (root) {
@@ -172,13 +174,13 @@ void s_ll_destroy(S_Ll list) {
 	list = NULL;
 }
 
-void s_ll_print(const S_Ll const list) {
+void s_ll_print(const S_Ll const restrict list) {
 	for (Node node = list->root; node; node = node->next)
 		printf("%s:%s\n", node->key, node->value);
 }
 
 S_Ll s_ll_create(void) {
-	const S_Ll const list = (S_Ll) malloc(sizeof(S_Ll));
+	const S_Ll const restrict list = (S_Ll) malloc(sizeof(S_Ll));
 	list->root = NULL;
 
 	return list;

@@ -20,8 +20,8 @@ typedef struct bst_s {
 
 typedef bst_t *Bst;
 
-static Node create_node(const char *const entry) {
-	const Node const node = (Node) malloc(sizeof(node_t));
+static Node create_node(const char *const restrict entry) {
+	const Node const restrict node = (Node) malloc(sizeof(node_t));
 	if (!node)
 		exit(EXIT_FAILURE);
 
@@ -48,7 +48,7 @@ static Node min_value_node(const Node const node) {
     return cur;
 }
 
-static void destroy_tree(Node root) {
+static void destroy_tree(Node restrict root) {
 	if (!root)
 		return;
 	destroy_tree(root->left);
@@ -60,7 +60,7 @@ static void destroy_tree(Node root) {
 	root = NULL;
 }
 
-static void print_tree_in_order(const Node const root) {
+static void print_tree_in_order(const Node const restrict root) {
 	if (!root)
 		return;
 	print_tree_in_order(root->left);
@@ -68,7 +68,7 @@ static void print_tree_in_order(const Node const root) {
 	print_tree_in_order(root->right);
 }
 
-static void print_tree_pre_order(const Node const root) {
+static void print_tree_pre_order(const Node const restrict root) {
 	if (!root)
 		return;
 	printf("%s\n", root->datum);
@@ -76,7 +76,7 @@ static void print_tree_pre_order(const Node const root) {
 	print_tree_pre_order(root->right);
 }
 
-void bst_insert(const Bst const bst, const char *const entry) {
+void bst_insert(const Bst const restrict bst, const char *const restrict entry) {
 	const Node const new_node = create_node(entry);
 
 	if (!bst->root) {
@@ -84,7 +84,8 @@ void bst_insert(const Bst const bst, const char *const entry) {
 		return;
 	}
 	int cmp_res;
-	Node cur = bst->root, parent;
+	Node restrict parent;
+	Node cur = bst->root;
 
 	while (cur) {
 		cmp_res = strncmp(entry, cur->datum, strnlen(entry, STR_MAX));
@@ -102,15 +103,15 @@ void bst_insert(const Bst const bst, const char *const entry) {
 		parent->right = new_node;
 }
 
-void bst_print_v1(const Bst const bst) {
+void bst_print_v1(const Bst const restrict bst) {
 	print_tree_in_order(bst->root);
 }
 
-void bst_print_v2(const Bst const bst) {
+void bst_print_v2(const Bst const restrict bst) {
 	print_tree_pre_order(bst->root);
 }
 
-Node remove_node(Node root, const char *const entry) {
+Node remove_node(Node root, const char *const restrict entry) {
 	int cmp_res = strncmp(entry, root->datum, strnlen(entry, STR_MAX));
 
 	if (!root)
@@ -120,24 +121,30 @@ Node remove_node(Node root, const char *const entry) {
 	else if (cmp_res > 0)
 		root->right = remove_node(root->right, entry);
 	else {
-		Node del_node = root;
+		Node restrict del_node = root;
 
 		if (!root->left && !root->right) { // Remove Leaf Node
 			root = NULL;
+
 			free(del_node->datum);
 			del_node->datum = NULL;
+
 			free(del_node);
 			del_node = NULL;
 		} else if (!root->left) { // Remove With One Left Child
 			root = root->right;
+
 			free(del_node->datum);
 			del_node->datum = NULL;
+
 			free(del_node);
 			del_node = NULL;
 		} else if (!root->right) { // Remove With One Right Child
 			root = root->left;
+
 			free(del_node->datum);
 			del_node->datum = NULL;
+
 			free(del_node);
 			del_node = NULL;
 		} else { // Remove With Two Children
@@ -152,7 +159,7 @@ Node remove_node(Node root, const char *const entry) {
 	return root;
 }
 
-char *bst_find(const Bst const bst, const char *const entry) {
+char *bst_find(const Bst const restrict bst, const char *const restrict entry) {
 	if (!bst->root) {
 		return "";
 	}
@@ -173,18 +180,18 @@ char *bst_find(const Bst const bst, const char *const entry) {
 	return "";
 }
 
-void bst_remove(const Bst const bst, const char *const entry) {
+void bst_remove(const Bst const restrict bst, const char *const restrict entry) {
 	remove_node(bst->root, entry);
 }
 
-void bst_destroy(Bst bst) {
+void bst_destroy(Bst restrict bst) {
 	destroy_tree(bst->root);
 	free(bst);
 	bst = NULL;
 }
 
 Bst bst_create(void) {
-	Bst bst = (Bst) malloc(sizeof(bst_t));
+	Bst restrict bst = (Bst) malloc(sizeof(bst_t));
 
 	if (!bst)
 		exit(EXIT_FAILURE);
@@ -194,7 +201,7 @@ Bst bst_create(void) {
 }
 
 int main(void) {
-	Bst bst = bst_create();
+	Bst restrict bst = bst_create();
 
 	bst_insert(bst, "g");
 

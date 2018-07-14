@@ -20,8 +20,8 @@ typedef struct d_ll_s {
 
 typedef d_ll_t *D_Ll;
 
-static Node create_node(const char *const entry) {
-	const Node const node = (Node) malloc(sizeof(node_t));
+static Node create_node(const char *const restrict entry) {
+	const Node const restrict node = (Node) malloc(sizeof(node_t));
 	if (!node)
 		exit(EXIT_FAILURE);
 
@@ -39,7 +39,7 @@ static Node create_node(const char *const entry) {
 	return node;
 }
 
-static Node find_node(const Node const list, const char *const entry) {
+static Node find_node(const Node const list, const char *const restrict entry) {
 	const size_t entry_len = strnlen(entry, STR_MAX);
 	Node cur = list;
 
@@ -52,7 +52,7 @@ static Node find_node(const Node const list, const char *const entry) {
 	return NULL;
 }
 
-void d_ll_insert(const D_Ll const list, const char *const entry) {
+void d_ll_insert(const D_Ll const list, const char *const restrict entry) {
 	const Node const new_node = create_node(entry);
 
 	if (!list->root) {
@@ -69,7 +69,7 @@ void d_ll_insert(const D_Ll const list, const char *const entry) {
 	root->next = new_node;
 }
 
-void d_ll_insert_sorted(const D_Ll const list, const char *const entry) {
+void d_ll_insert_sorted(const D_Ll const restrict list, const char *const entry) {
 	const Node const new_node = create_node(entry);
 
 	if (!list->root) {
@@ -103,7 +103,7 @@ void d_ll_insert_sorted(const D_Ll const list, const char *const entry) {
 	cur->next = new_node;
 }
 
-int d_ll_remove(const D_Ll const list, const char *const entry) {
+int d_ll_remove(const D_Ll const restrict list, const char *const restrict entry) {
 	if (!list->root)
 		return -1;
 
@@ -121,7 +121,7 @@ int d_ll_remove(const D_Ll const list, const char *const entry) {
 		node->next->prev = node->prev;
 	}
 
-	Node delete_node = node;
+	Node restrict delete_node = node;
 
 	free(delete_node->datum);
 	delete_node->datum = NULL;
@@ -130,8 +130,9 @@ int d_ll_remove(const D_Ll const list, const char *const entry) {
 	return 0;
 }
 
-void d_ll_destroy(D_Ll list) {
-	Node tmp, root = list->root;;
+void d_ll_destroy(D_Ll restrict list) {
+	Node restrict tmp;
+	Node root = list->root;
 
 	while (root) {
 		tmp = root;
@@ -146,13 +147,13 @@ void d_ll_destroy(D_Ll list) {
 	list = NULL;
 }
 
-void d_ll_print(const D_Ll const list) {
+void d_ll_print(const D_Ll const restrict list) {
 	for (Node node = list->root; node; node = node->next)
 		printf("%s\n", node->datum);
 }
 
 D_Ll d_ll_create(void) {
-	const D_Ll const list = (D_Ll) malloc(sizeof(D_Ll));
+	const D_Ll const restrict list = (D_Ll) malloc(sizeof(D_Ll));
 	list->root = NULL;
 
 	return list;
@@ -167,7 +168,7 @@ D_Ll d_ll_create(void) {
 	Johnson
 */
 int main(void) {
-	const D_Ll const list = d_ll_create(); // Create
+	const D_Ll const restrict list = d_ll_create(); // Create
 
 	d_ll_remove(list, "a"); // Remove non existent node
 

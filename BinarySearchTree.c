@@ -141,11 +141,11 @@ Node remove_node(Node root, const char *const entry) {
 			free(del_node);
 			del_node = NULL;
 		} else { // Remove With Two Children
-			const size_t del_key_len = strnlen(del_node->datum, STR_MAX);
+			const size_t root_key_len = strnlen(root->datum, STR_MAX);
 			del_node = min_value_node(root->right);
-			root->datum = (char*) realloc(root->datum, sizeof(char) * (del_key_len + NT_LEN));
+			root->datum = (char*) realloc(root->datum, sizeof(char) * (root_key_len + NT_LEN));
 
-			strncpy(root->datum, del_node->datum, del_key_len);
+			strncpy(root->datum, del_node->datum, root_key_len);
 			root->right = remove_node(root->right, del_node->datum);
 		}
 	}
@@ -229,6 +229,8 @@ int main(void) {
 	printf("\n");
 
 	printf("This is bst_find and what it found: %s\n", bst_find(bst, "h"));
+
+	printf("\n");
 
 	bst_remove(bst, "t"); // Delete  leaf
 

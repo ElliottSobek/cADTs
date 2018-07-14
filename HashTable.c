@@ -65,20 +65,20 @@ static Node find_prev_node(Node const list, const char *const restrict key) {
 	return NULL;
 }
 
-static bool node_exists(const Node const list, const char *const restrict key) {
+static Node s_ll_find(const S_Ll const restrict list, const char *const restrict key) {
 	const size_t key_len = strnlen(key, STR_MAX);
-	Node cur = list;
+	Node cur = list->root;
 
 	while (cur) {
 		if (strncmp(key, cur->key, key_len) == 0)
-			return true;
+			return cur;
 		cur = cur->next;
 	}
 
-	return false;
+	return NULL;
 }
 
-void s_ll_insert(const S_Ll const restrict list, const char *const restrict key, const char *const restrict value) {
+static void s_ll_insert(const S_Ll const restrict list, const char *const restrict key, const char *const restrict value) {
 	const Node const new_node = create_node(key, value);
 	Node node = list->root;
 
@@ -93,40 +93,43 @@ void s_ll_insert(const S_Ll const restrict list, const char *const restrict key,
 	node->next = new_node;
 }
 
-void s_ll_insert_sorted(const S_Ll const restrict list, const char *const restrict key, const char *const restrict value) {
-	const Node const new_node = create_node(key, value);
+// THIS IS A VALID FUNCTION, ONLY COMMENTED OUT DUE TO COMPLIER ERROR BEING UNUSED IN THIS INSTANCE
 
-	if (!list->root) {
-		list->root = new_node;
-		return;
-	}
+// static void s_ll_insert_sorted(const S_Ll const restrict list, const char *const restrict key,
+//                                const char *const restrict value) {
+// 	const Node const new_node = create_node(key, value);
 
-	const size_t key_len = strnlen(key, STR_MAX);
+// 	if (!list->root) {
+// 		list->root = new_node;
+// 		return;
+// 	}
 
-	if (strncmp(key, list->root->key, key_len) < 0) {
-		new_node->next = list->root;
-		list->root = new_node;
-		return;
-	}
+// 	const size_t key_len = strnlen(key, STR_MAX);
 
-	Node restrict prev = NULL;
-	Node cur = list->root;
+// 	if (strncmp(key, list->root->key, key_len) < 0) {
+// 		new_node->next = list->root;
+// 		list->root = new_node;
+// 		return;
+// 	}
 
-	while (cur) {
-		if (strncmp(key, cur->key, key_len) < 0) {
-			new_node->next = cur;
-			prev->next = new_node;
-			return;
-		}
-		prev = cur;
-		cur = cur->next;
-	}
+// 	Node restrict prev = NULL;
+// 	Node cur = list->root;
 
-	prev->next = new_node;
-}
+// 	while (cur) {
+// 		if (strncmp(key, cur->key, key_len) < 0) {
+// 			new_node->next = cur;
+// 			prev->next = new_node;
+// 			return;
+// 		}
+// 		prev = cur;
+// 		cur = cur->next;
+// 	}
 
-int s_ll_remove(const S_Ll const restrict list, const char *const restrict key) {
-	if (!node_exists(list->root, key))
+// 	prev->next = new_node;
+// }
+
+static int s_ll_remove(const S_Ll const restrict list, const char *const restrict key) {
+	if (!s_ll_find(list, key))
 		return -1;
 
 	const Node const root = list->root, prev = find_prev_node(root, key);
@@ -154,7 +157,7 @@ int s_ll_remove(const S_Ll const restrict list, const char *const restrict key) 
 	return 0;
 }
 
-void s_ll_destroy(S_Ll restrict list) {
+static void s_ll_destroy(S_Ll restrict list) {
 	Node tmp, root = list->root;
 
 	while (root) {
@@ -174,12 +177,12 @@ void s_ll_destroy(S_Ll restrict list) {
 	list = NULL;
 }
 
-void s_ll_print(const S_Ll const restrict list) {
+static void s_ll_print(const S_Ll const restrict list) {
 	for (Node node = list->root; node; node = node->next)
 		printf("%s:%s\n", node->key, node->value);
 }
 
-S_Ll s_ll_create(void) {
+static S_Ll s_ll_create(void) {
 	const S_Ll const restrict list = (S_Ll) malloc(sizeof(S_Ll));
 	list->root = NULL;
 

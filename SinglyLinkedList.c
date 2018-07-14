@@ -54,17 +54,17 @@ static Node find_prev_node(Node const list, const char *const restrict entry) {
 	return NULL;
 }
 
-static bool node_exists(const Node const list, const char *const restrict entry) {
+Node s_ll_find(const S_Ll const restrict list, const char *const restrict entry) {
 	const size_t entry_len = strnlen(entry, STR_MAX);
-	Node cur = list;
+	Node cur = list->root;
 
 	while (cur) {
 		if (strncmp(entry, cur->datum, entry_len) == 0)
-			return true;
+			return cur;
 		cur = cur->next;
 	}
 
-	return false;
+	return NULL;
 }
 
 void s_ll_insert(const S_Ll const restrict list, const char *const restrict entry) {
@@ -115,7 +115,7 @@ void s_ll_insert_sorted(const S_Ll const restrict list, const char *const restri
 }
 
 int s_ll_remove(const S_Ll const restrict list, const char *const restrict entry) {
-	if (!node_exists(list->root, entry))
+	if (!s_ll_find(list, entry))
 		return -1;
 
 	const Node const root = list->root, prev = find_prev_node(root, entry);

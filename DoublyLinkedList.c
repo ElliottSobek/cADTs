@@ -39,9 +39,9 @@ static Node create_node(const char *const restrict entry) {
 	return node;
 }
 
-static Node find_node(const Node const list, const char *const restrict entry) {
+Node d_ll_find(const D_Ll const list, const char *const restrict entry) {
 	const size_t entry_len = strnlen(entry, STR_MAX);
-	Node cur = list;
+	Node cur = list->root;
 
 	while (cur) {
 		if (strncmp(entry, cur->datum, entry_len) == 0)
@@ -107,7 +107,7 @@ int d_ll_remove(const D_Ll const restrict list, const char *const restrict entry
 	if (!list->root)
 		return -1;
 
-	const Node const node = find_node(list->root, entry);
+	const Node const node = d_ll_find(list, entry);
 
 	if (!node)
 		return -1;

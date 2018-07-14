@@ -40,9 +40,9 @@ static Node create_node(const char *const entry) {
 }
 
 static Node min_value_node(const Node const node) {
-    Node cur = node->left;
+    Node cur = node;
 
-    while (cur)
+    while (cur->left)
         cur = cur->left;
 
     return cur;
@@ -122,25 +122,25 @@ Node remove_node(Node root, const char *const entry) {
 	else {
 		Node del_node = root;
 
-		if (!root->left && !root->right) {
+		if (!root->left && !root->right) { // Remove Leaf Node
 			root = NULL;
 			free(del_node->datum);
 			del_node->datum = NULL;
 			free(del_node);
 			del_node = NULL;
-		} else if (!root->left) {
+		} else if (!root->left) { // Remove With One Left Child
 			root = root->right;
 			free(del_node->datum);
 			del_node->datum = NULL;
 			free(del_node);
 			del_node = NULL;
-		} else if (!root->right) {
+		} else if (!root->right) { // Remove With One Right Child
 			root = root->left;
 			free(del_node->datum);
 			del_node->datum = NULL;
 			free(del_node);
 			del_node = NULL;
-		} else {
+		} else { // Remove With Two Children
 			const size_t del_key_len = strnlen(del_node->datum, STR_MAX);
 			del_node = min_value_node(root->right);
 			root->datum = (char*) realloc(root->datum, sizeof(char) * (del_key_len + NT_LEN));
@@ -224,13 +224,17 @@ int main(void) {
 
 	printf("\n");
 
+	bst_print_v2(bst);
+
+	printf("\n");
+
 	printf("This is bst_find and what it found: %s\n", bst_find(bst, "h"));
 
 	bst_remove(bst, "t"); // Delete  leaf
 
 	bst_remove(bst, "m"); // Delete with one node
 
-	// bst_remove(bst, "j"); // Delete two nodes
+	bst_remove(bst, "j"); // Delete two nodes
 
 	bst_print_v2(bst);
 

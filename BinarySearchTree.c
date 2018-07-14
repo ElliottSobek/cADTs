@@ -48,7 +48,7 @@ static Node min_value_node(const Node const node) {
     return cur;
 }
 
-static void destroy_tree(Node root) { // Right order?
+static void destroy_tree(Node root) {
 	if (!root)
 		return;
 	destroy_tree(root->left);

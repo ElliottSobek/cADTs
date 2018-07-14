@@ -39,7 +39,16 @@ static Node create_node(const char *const entry) {
 	return node;
 }
 
-static void destroy_tree(Node root) {
+static Node min_value_node(const Node const node) {
+    Node cur = node->left;
+
+    while (cur)
+        cur = cur->left;
+
+    return cur;
+}
+
+static void destroy_tree(Node root) { // Right order?
 	if (!root)
 		return;
 	destroy_tree(root->left);
@@ -51,7 +60,7 @@ static void destroy_tree(Node root) {
 	root = NULL;
 }
 
-static void print_tree_in_order(Node const root) {
+static void print_tree_in_order(const Node const root) {
 	if (!root)
 		return;
 	print_tree_in_order(root->left);
@@ -59,7 +68,7 @@ static void print_tree_in_order(Node const root) {
 	print_tree_in_order(root->right);
 }
 
-static void print_tree_pre_order(Node const root) {
+static void print_tree_pre_order(const Node const root) {
 	if (!root)
 		return;
 	printf("%s\n", root->datum);
@@ -67,7 +76,7 @@ static void print_tree_pre_order(Node const root) {
 	print_tree_pre_order(root->right);
 }
 
-void bst_insert(Bst bst, const char *const entry) {
+void bst_insert(const Bst const bst, const char *const entry) {
 	const Node const new_node = create_node(entry);
 
 	if (!bst->root) {
@@ -93,20 +102,11 @@ void bst_insert(Bst bst, const char *const entry) {
 		parent->right = new_node;
 }
 
-Node min_value_node(Node const node) {
-    Node cur = node;
-
-    while (cur->left)
-        cur = cur->left;
-
-    return cur;
-}
-
-void bst_print_v1(Bst bst) {
+void bst_print_v1(const Bst const bst) {
 	print_tree_in_order(bst->root);
 }
 
-void bst_print_v2 (Bst bst) {
+void bst_print_v2(const Bst const bst) {
 	print_tree_pre_order(bst->root);
 }
 
@@ -152,11 +152,7 @@ Node remove_node(Node root, const char *const entry) {
 	return root;
 }
 
-void bst_remove(Bst bst, const char *const entry) {
-	remove_node(bst->root, entry);
-}
-
-char *bst_find(Bst bst, const char *const entry) {
+char *bst_find(const Bst const bst, const char *const entry) {
 	if (!bst->root) {
 		return "";
 	}
@@ -175,6 +171,10 @@ char *bst_find(Bst bst, const char *const entry) {
 	}
 
 	return "";
+}
+
+void bst_remove(const Bst const bst, const char *const entry) {
+	remove_node(bst->root, entry);
 }
 
 void bst_destroy(Bst bst) {
@@ -224,13 +224,13 @@ int main(void) {
 
 	printf("\n");
 
-	bst_find(bst, "h");
+	printf("This is bst_find and what it found: %s\n", bst_find(bst, "h"));
 
 	bst_remove(bst, "t"); // Delete  leaf
 
 	bst_remove(bst, "m"); // Delete with one node
 
-	bst_remove(bst, "j"); // Delete two nodes
+	// bst_remove(bst, "j"); // Delete two nodes
 
 	bst_print_v2(bst);
 
